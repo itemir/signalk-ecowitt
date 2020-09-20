@@ -1,0 +1,26 @@
+{
+  "name": "signalk-ecowitt",
+  "version": "0.0.1",
+  "description": "SignalK plugin for Ecowitt weather sensors",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "signalk-node-server-plugin"
+  ],
+  "author": "Ilker Temir <ilker@ilkertemir.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itemir/signalk-ecowitt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itemir/signalk-ecowitt/issues"
+  },
+  "homepage": "https://github.com/itemir/signalk-ecowitt#readme",
+  "dependencies": {
+    "http": "0.0.1-security",
+    "querystring": "^0.2.0"
+  }
+}
