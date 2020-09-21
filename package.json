@@ -1,6 +1,6 @@
 {
   "name": "signalk-ecowitt",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SignalK plugin for Ecowitt weather sensors",
   "main": "index.js",
   "scripts": {
