@@ -99,7 +99,7 @@ module.exports = function (app) {
           if ('windspeedmph' in q) {
             var windSpeed = mph2mps (parseFloat (q.windspeedmph));
             values.push ({
-              path: 'environment.wind.speedTrue',
+              path: 'environment.wind.speedApparent',
               value: windSpeed
             });
           }
@@ -107,7 +107,7 @@ module.exports = function (app) {
           if ('winddir' in q) {
             var windDirection = degrees2radians (parseFloat (q.winddir));
             values.push ({
-              path: 'environment.wind.directionTrue',
+              path: 'environment.wind.angleApparent',
               value: windDirection
             });
           }
