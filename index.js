@@ -98,16 +98,22 @@ module.exports = function (app) {
 
           if ('windspeedmph' in q) {
             var windSpeed = mph2mps (parseFloat (q.windspeedmph));
+            var path = 'environment.wind.speedTrue';
+            if (options.windTrue == false) 
+              path = 'environment.wind.speedApparent'; 
             values.push ({
-              path: 'environment.wind.speedTrue',
+              path: path,
               value: windSpeed
             });
           }
 
           if ('winddir' in q) {
             var windDirection = degrees2radians (parseFloat (q.winddir));
+            var path = 'environment.wind.directionTrue';
+            if (options.windTrue == false)
+              path = 'environment.wind.angleApparent';;
             values.push ({
-              path: 'environment.wind.directionTrue',
+              path: path,
               value: windDirection
             });
           }
@@ -139,6 +145,11 @@ module.exports = function (app) {
         type: 'number',
         title: 'Server Port',
         default: 1923
+      },
+      windTrue: {
+        type: 'boolean',
+        title: 'Use true wind speed and direction (as opposed to apparent)',
+        default: true
       },
       temp1: {
         type: 'string',
