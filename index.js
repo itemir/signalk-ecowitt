@@ -53,7 +53,7 @@ module.exports = function (app) {
           res.end();
 
           var tempin = fahrenheit2kelvin (parseFloat (q.tempinf));
-          var humidityin = parseFloat(q.humidityin);
+          var humidityin = parseFloat(q.humidityin)/100;
           var pressure = inhg2pascal (parseFloat (q.baromabsin));
 
           var values = [
@@ -85,7 +85,7 @@ module.exports = function (app) {
               }
             }
             if (humidityKey in q) {
-              var humidity = parseFloat (q[humidityKey]);
+              var humidity = parseFloat (q[humidityKey])/100;
               eval ('var key=options.humidity' + i.toString());
               if (key) {
                 values.push ({
