@@ -37,6 +37,11 @@ module.exports = function (app) {
     return (Math.round(s*0.44704*100)/100);
   }
 
+  // convert inches to mm as a float
+  function in2mm(inches) {
+    return (Math.round(inches*25.4*100)/100);
+  }
+
   plugin.start = function (options, restartPlugin) {
     var http = require('http');
     var qs = require('querystring');
@@ -96,14 +101,62 @@ module.exports = function (app) {
             }
           }
 
-          if ('windspeedmph' in q) {
-            var windSpeed = mph2mps (parseFloat (q.windspeedmph));
-            var path = 'environment.wind.speedTrue';
-            if (options.windTrue == false) 
-              path = 'environment.wind.speedApparent'; 
-            values.push ({
+
+          // GW2000/Wittboy specific stuff
+
+          if ( 'solarradiation' in q) {
+            values.push({
+              path: "environment.outside.solarRadiation",
+              value: parseFloat(q.solarradiation),
+            });
+          }
+          if ('uv' in q) {
+            values.push({
+              path: "environment.outside.uvIndex",
+              value: parseInt(q.uv),
+            });
+          }
+
+          var rain_params = [
+            "rate",
+            "event",
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly",
+          ];
+
+          for (let i = 0; i < rain_params.length; i++) {
+            let key = rain_params[i][0] + "rain_piezo";
+            if (key in q) {
+              values.push({
+                path: "environment.outside.rain." + rain_params[i],
+                value: in2mm(parseFloat(q[key])),
+              });
+            }
+          }
+
+          // end of Wittboy specific stuff
+
+          if ("windspeedmph" in q) {
+            var windSpeed = mph2mps(parseFloat(q.windspeedmph));
+            var path = "environment.wind.speedTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.speedApparent";
+            values.push({
               path: path,
-              value: windSpeed
+              value: windSpeed,
+            });
+          }
+
+          if ("windgustmph" in q) {
+            var windGust = mph2mps(parseFloat(q.windgustmph));
+            var path = "environment.wind.gustTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.gustApparent";
+            values.push({
+              path: path,
+              value: windGust,
             });
           }
 
