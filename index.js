@@ -204,6 +204,17 @@ module.exports = function (app) {
             });
           }
 
+          if ("maxdailygust" in q) {
+            var maxGust = mph2mps(parseFloat(q.maxdailygust));
+            var path = "environment.wind.gustMaxTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.gustMaxApparent";
+            values.push({
+              path: path,
+              value: maxGust,
+            });
+          }
+
           if ('winddir' in q) {
             var windDirection = degrees2radians (parseFloat (q.winddir));
             var path = 'environment.wind.directionTrue';
