@@ -26,7 +26,7 @@ module.exports = function (app) {
   }
 
   function fahrenheit2kelvin(f) {
-    return (Math.round((f - 32) * 5/9 + 273.15));
+    return (Math.round((f+459.67)*5/9*100)/100);
   }
 
   function degrees2radians(d) {
@@ -35,6 +35,21 @@ module.exports = function (app) {
 
   function mph2mps(s) {
     return (Math.round(s*0.44704*100)/100);
+  }
+
+  // convert inches to mm as a float
+  function in2mm(inches) {
+    return (Math.round(inches*25.4*100)/100);
+  }
+
+  function calculateHeatIndex(fahrenheit, humidity) {
+    // Constants for calculation
+    let c = [-42.379, 2.04901523, 10.14333127, -0.22475541, -6.83783e-03, -5.481717e-02, 1.22874e-03, 8.5282e-04, -1.99e-06];
+
+    return  c[0] + (c[1] * fahrenheit) + (c[2] * humidity) + (c[3] * fahrenheit * humidity) + 
+      (c[4] * fahrenheit * fahrenheit) + (c[5] * humidity * humidity) + 
+      (c[6] * fahrenheit * fahrenheit * humidity) + (c[7] * fahrenheit * humidity * humidity) +
+      (c[8] * fahrenheit * fahrenheit * humidity * humidity);
   }
 
   plugin.start = function (options, restartPlugin) {
@@ -55,6 +70,7 @@ module.exports = function (app) {
           var tempin = fahrenheit2kelvin (parseFloat (q.tempinf));
           var humidityin = parseFloat(q.humidityin)/100;
           var pressure = inhg2pascal (parseFloat (q.baromabsin));
+          var heatindexin = fahrenheit2kelvin ( calculateHeatIndex (parseFloat(q.tempinf), parseFloat(q.humidityin)));
 
           var values = [
             {
@@ -68,6 +84,10 @@ module.exports = function (app) {
             {
               path: 'environment.outside.pressure',
               value: pressure
+            },
+            {
+              path: 'environment.inside.heatIndex',
+              value: heatindexin
             }
           ];
 
@@ -94,16 +114,104 @@ module.exports = function (app) {
                 });
               }
             }
+
+            if ((tempKey in q) && (humidityKey in q)) {
+              var heatIndex = calculateHeatIndex (parseFloat(q[tempKey]), parseFloat(q[humidityKey]));
+              eval ('var key=options.heatIndex' + i.toString());
+              if (key) {
+                values.push ({
+                  path: key,
+                  value: heatIndex
+                });
+              }
+            }
           }
 
-          if ('windspeedmph' in q) {
-            var windSpeed = mph2mps (parseFloat (q.windspeedmph));
-            var path = 'environment.wind.speedTrue';
-            if (options.windTrue == false) 
-              path = 'environment.wind.speedApparent'; 
-            values.push ({
+          // GW2000/Wittboy specific stuff
+
+          // GW2000 has its own temp and humidity sensors
+          if ( q.model.startsWith('GW2000') ) {
+            values.push({
+              path: "environment.outside.temperature",
+              value: fahrenheit2kelvin(parseFloat(q.tempf)),
+            });
+
+            values.push({
+              path: "environment.outside.humidity",
+              value: parseFloat(q.humidity)/100,
+            });
+
+            var heatIndex = calculateHeatIndex (parseFloat(q.tempf), parseFloat(q.humidity));
+            values.push({
+              path: "environment.outside.heatIndex",
+              value: fahrenheit2kelvin(heatIndex),
+            });
+          }
+
+          if ( 'solarradiation' in q) {
+            values.push({
+              path: "environment.outside.solarRadiation",
+              value: parseFloat(q.solarradiation),
+            });
+          }
+          if ('uv' in q) {
+            values.push({
+              path: "environment.outside.uvIndex",
+              value: parseInt(q.uv),
+            });
+          }
+
+          var rain_params = [
+            "rate",
+            "event",
+            "daily",
+            "weekly",
+            "monthly",
+            "yearly",
+          ];
+
+          for (let i = 0; i < rain_params.length; i++) {
+            let key = rain_params[i][0] + "rain_piezo";
+            if (key in q) {
+              values.push({
+                path: "environment.outside.rain." + rain_params[i],
+                value: in2mm(parseFloat(q[key])),
+              });
+            }
+          }
+
+          // end of Wittboy specific stuff
+
+          if ("windspeedmph" in q) {
+            var windSpeed = mph2mps(parseFloat(q.windspeedmph));
+            var path = "environment.wind.speedTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.speedApparent";
+            values.push({
               path: path,
-              value: windSpeed
+              value: windSpeed,
+            });
+          }
+
+          if ("windgustmph" in q) {
+            var windGust = mph2mps(parseFloat(q.windgustmph));
+            var path = "environment.wind.gustTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.gustApparent";
+            values.push({
+              path: path,
+              value: windGust,
+            });
+          }
+
+          if ("maxdailygust" in q) {
+            var maxGust = mph2mps(parseFloat(q.maxdailygust));
+            var path = "environment.wind.gustMaxTrue";
+            if (options.windTrue == false)
+              path = "environment.wind.gustMaxApparent";
+            values.push({
+              path: path,
+              value: maxGust,
             });
           }
 
@@ -154,12 +262,12 @@ module.exports = function (app) {
       temp1: {
         type: 'string',
         title: 'SignalK key for Channel-1 temperature',
-        default: 'environment.outside.temperature'
+        default: 'environment.bedroom.temperature'
       },
       humidity1: {
         type: 'string',
         title: 'SignalK key for Channel-1 humidity',
-        default: 'environment.outside.humidity'
+        default: 'environment.bedroom.humidity'
       },
       temp2: {
         type: 'string',
